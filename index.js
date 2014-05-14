@@ -50,7 +50,8 @@ Ajax._formData = function (o) {
 };
 Ajax.ajax = function (o) {
     var xhr = Ajax.xhr(), timer, n = 0;
-    o = _extend({ userAgent: "XMLHttpRequest", lang: "en", type: "GET", data: null, dataType: "application/x-www-form-urlencoded" }, o);
+    if(typeof xhr.open !== 'function') return;
+    o = _extend({ userAgent: "XMLHttpRequest", lang: "en", type: "GET", data: null, dataType: "application/json" }, o);
     if (o.timeout) timer = setTimeout(function () { xhr.abort(); if (o.timeoutFn) o.timeoutFn(o.url); }, o.timeout);
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
@@ -64,7 +65,7 @@ Ajax.ajax = function (o) {
         else if (o.progress) o.progress(++n);
     };
     var url = o.url, data = null;
-    o.type = (o.type||'').toUpperCase();
+    o.type = (o.type||'GET').toUpperCase();
     var isPost = o.type == "POST" || o.type == "PUT";
     if (!isPost && o.data) url += "?" + Ajax._formData(o.data);
     xhr.open(o.type, url);
@@ -76,5 +77,12 @@ Ajax.ajax = function (o) {
     }
     xhr.send(data);
 };
+// alias methods
+['get','post','put','delete','patch'].forEach(function(method) {
+    Ajax[method] = function(o) {
+        var cfg = _extend(o, {type:method.toUppercase()});
+        Ajax.ajax(cfg);
+    };
+});
 
 module.exports = Ajax;
